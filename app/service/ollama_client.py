@@ -62,7 +62,7 @@ async def score_couriers_with_llm(request: AssignmentRequest) -> list[CourierRan
         async with httpx.AsyncClient(timeout=settings.ollama_timeout_seconds) as client:
             response = await client.post(
                 f"{settings.ollama_base_url}/api/generate",
-                json={"model": settings.ollama_model, "prompt": prompt, "stream": False, "format": "json"},
+                json={"model": settings.ollama_model, "prompt": prompt, "stream": False, "format": "json", "think": False},
             )
             response.raise_for_status()
             body = response.json()
