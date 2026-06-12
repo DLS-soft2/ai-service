@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.assignments import router as assignments_router
 from app.api.health import router as health_router
@@ -19,6 +20,7 @@ app = FastAPI(
     version=settings.service_version,
     lifespan=lifespan,
 )
+Instrumentator().instrument(app).expose(app)
 
 app.include_router(health_router)
 app.include_router(assignments_router)
