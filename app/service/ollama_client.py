@@ -27,8 +27,8 @@ def _build_prompt(request: AssignmentRequest) -> str:
         f"Available couriers:\n{couriers_text}\n\n"
         "Rank each courier. Return a JSON object with a single key \"rankings\" containing an array. "
         "Each element must have: \"courier_id\" (string UUID), \"score\" (float 0-1, higher is better), "
-        "\"estimated_delivery_minutes\" (positive integer), \"reasoning\" (brief explanation).\n"
-        "Return ONLY the JSON object, no other text."
+        "\"estimated_delivery_minutes\" (positive integer), \"reasoning\" (max 8 words).\n"
+        "Return ONLY the JSON object, no other text.\n/no_think"
     )
 
 
@@ -59,14 +59,15 @@ async def score_couriers_with_llm(request: AssignmentRequest) -> list[CourierRan
     """Call Ollama to score couriers. Raises OllamaUnavailableError on any failure."""
     prompt = _build_prompt(request)
     try:
-        async with httpx.AsyncClient(timeout=settings.ollama_timeout_seconds) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(settings.ollama_timeout_seconds, connect=10.0)) as client:
             response = await client.post(
                 f"{settings.ollama_base_url}/api/generate",
-                json={"model": settings.ollama_model, "prompt": prompt, "stream": False, "format": "json", "think": False},
+                json={"model": settings.ollama_model, "prompt": prompt, "stream": False, "format": "json",
+                      "think": False, "options": {"num_predict": 768, "num_ctx": 2048}},
             )
             response.raise_for_status()
             body = response.json()
             return _parse_rankings(body["response"], request)
     except (httpx.HTTPError, httpx.TimeoutException, KeyError, json.JSONDecodeError, ValueError, TypeError) as exc:
-        logger.warning("Ollama scoring failed: %s", exc)
-        raise OllamaUnavailableError(str(exc)) from exc
+        logger.warning("Ollama scoring failed: %s: %s", type(exc).__name__, exc or repr(exc))
+        raise OllamaUnavailableError(f"{type(exc).__name__}: {exc or repr(exc)}") from exc

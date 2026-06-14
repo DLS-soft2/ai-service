@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ai-service"
-version = "1.0.1"
+version = "1.0.2"
 description = "AI service for the DLS-2 food delivery platform"
 authors = ["Benjamin Harris <Benny@aingivingmymail.com>"]
 readme = "README.md"

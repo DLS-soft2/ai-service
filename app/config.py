@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:1b"
-    ollama_timeout_seconds: int = 30
+    ollama_timeout_seconds: int = 120
 
 
 settings = Settings()
